@@ -1,42 +1,69 @@
-#root {
-  max-width: 1280px;
+.container {
+  max-width: 900px;
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 16px;
+  font-family: system-ui, Arial;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.modeBox {
+  display: flex;
+  gap: 16px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin: 12px 0;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.chat {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  min-height: 380px;
+  background: #616060;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.msg {
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #eee;
 }
 
-.card {
-  padding: 2em;
+.msg.user {
+  background: #0f0f0f;
 }
 
-.read-the-docs {
-  color: #888;
+.msg.bot {
+  background: #13758d;
+}
+
+.role {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.sources {
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.inputRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.inputRow input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #000000;
+}
+
+.inputRow button {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #f3f3f3;
+  cursor: pointer;
 }

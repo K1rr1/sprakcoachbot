@@ -1,5 +1,6 @@
 import { ChatOllama } from "@langchain/community/chat_models/ollama";
 import { StringOutputParser } from "@langchain/core/output_parsers";
+import { RunnableSequence } from "@langchain/core/runnables";
 import { qaPrompt, planPrompt } from "./prompts";
 import { getRetriever } from "./retriever";
 import { history } from "./memory";
@@ -25,7 +26,7 @@ async function historyToText() {
 }
 
 export async function askCoach({ mode, input }) {
-  // 1) Scope-check (stoppa irrelevanta frågor)
+  // 1) Scope-check (stoppa orrelevanta frågor)
   const ok = await isInScope(input);
   if (!ok) {
     const refusal =
@@ -35,7 +36,7 @@ export async function askCoach({ mode, input }) {
     return { answer: refusal, sources: [] };
   }
 
-  // 2) Hämta relevanta källor från Supabase (RAG)
+  // 2) Hämta relevanta källor från Supabase 
   const retriever = await getRetriever();
   const docs = await retriever.getRelevantDocuments(input);
   const context = docsToContext(docs);
@@ -50,14 +51,17 @@ export async function askCoach({ mode, input }) {
   });
 
   const prompt = mode === "plan" ? planPrompt : qaPrompt;
-  const messages = await prompt.formatMessages({ context, chat_history, input });
 
-  // 4) Kör LLM
-  const parser = new StringOutputParser();
-  const res = await llm.invoke(messages);
-  const answer = await parser.invoke(res);
+  // 4) Kör LLM via RunnableSequence 
+  const chain = RunnableSequence.from([
+    prompt,
+    llm,
+    new StringOutputParser(),
+  ]);
 
-  // 5) Uppdatera minnet (session)
+  const answer = await chain.invoke({ context, chat_history, input });
+
+  // 5) Uppdatera minnet ( per session, hoppar in och ut så rensas det)
   await history.addUserMessage(input);
   await history.addAIMessage(answer);
 

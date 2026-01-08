@@ -1,16 +1,50 @@
-# React + Vite
+## Köra appen 
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+För att appen ska fungera behöver man:
+- en Supabase-projekt med tabellen documents + funktionen match_documents (SQL finns i längst ner i README)
+- en .env (kopiera .env.example) med Supabase URL + keys fyll i värden
+- Ollama igång lokalt (ollama serve) + modeller installerade
 
-Currently, two official plugins are available:
+Steg:
+1) npm install
+2) Skapa .env från .env.example och fyll i värden (Supabase: Project Settings → API settings)
+3) Lägg text i data/sprakverkstan.txt
+4) node scripts/ingest.js för och fylla tabbelen som skapas av SQL blocket
+5) ollama serve (i separat terminal,glömmer alltid detta)
+6) npm run dev
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## React Compiler
+ SQL Blocket :
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+ create extension if not exists vector;
 
-## Expanding the ESLint configuration
+create table if not exists documents (
+  id bigserial primary key,
+  content text not null,
+  metadata jsonb,
+  embedding vector(768)
+);
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+create or replace function public.match_documents (
+  query_embedding vector(768),
+  match_count int default 5,
+  filter jsonb default '{}'::jsonb
+)
+returns table (
+  id bigint,
+  content text,
+  metadata jsonb,
+  similarity float
+)
+language sql stable
+as $$
+  select
+    d.id,
+    d.content,
+    d.metadata,
+    1 - (d.embedding <=> query_embedding) as similarity
+  from public.documents d
+  where (filter = '{}'::jsonb or d.metadata @> filter)
+  order by d.embedding <=> query_embedding
+  limit match_count;
+$$;
